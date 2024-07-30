@@ -1,18 +1,17 @@
 package com.hieushin.identity_service.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.time.LocalDate;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserUpdateRequest {
-    String password;
-    String firstName;
-    String lastName;
-    LocalDate dob;
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class ApiResponse <T> {
+    private int code = 200;
+    private String message;
+    private T result;
 }
