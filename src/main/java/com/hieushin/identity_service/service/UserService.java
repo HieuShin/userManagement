@@ -5,30 +5,35 @@ import com.hieushin.identity_service.dto.request.UserUpdateRequest;
 import com.hieushin.identity_service.entity.User;
 import com.hieushin.identity_service.exception.AppException;
 import com.hieushin.identity_service.exception.ErrorCode;
+import com.hieushin.identity_service.mapper.UserMapper;
 import com.hieushin.identity_service.repository.UserRepository;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserService {
-    @Autowired
     private UserRepository userRepository;
+    private UserMapper userMapper;
 
     public User createUser(UserCreationRequest request) {
-        User user = new User();
-
         if(userRepository.existsByUsername(request.getUsername())) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
 
-        user.setUsername(request.getUsername());
-        user.setPassword(request.getPassword());
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setDob(request.getDob());
+        User user = userMapper.toUser(request);
+
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         userRepository.save(user);
         return user;
@@ -44,10 +49,8 @@ public class UserService {
 
     public User updateUser(String userId, UserUpdateRequest request) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        user.setPassword(request.getPassword());
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setDob(request.getDob());
+
+         userMapper.updateUser(user, request);
 
         userRepository.save(user);
         return user;
